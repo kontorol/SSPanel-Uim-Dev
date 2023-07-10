@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Utils\Telegram\Commands;
 
+use App\Models\Setting;
 use App\Models\User;
 use App\Utils\Telegram\Reply;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
+use function json_encode;
 
 /**
  * Class MyCommand.
@@ -17,12 +19,12 @@ final class MyCommand extends Command
     /**
      * @var string Command Name
      */
-    protected $name = 'my';
+    protected string $name = 'my';
 
     /**
      * @var string Command Description
      */
-    protected $description = '[群组/私聊] 我的个人信息.';
+    protected string $description = '[群组/私聊] 我的个人信息.';
 
     /**
      * {@inheritdoc}
@@ -39,13 +41,13 @@ final class MyCommand extends Command
         $ChatID = $Message->getChat()->getId();
 
         if ($ChatID < 0) {
-            if ($_ENV['telegram_group_quiet'] === true) {
+            if (Setting::obtain('telegram_group_quiet')) {
                 // 群组中不回应
-                return;
+                return null;
             }
             if ($ChatID !== $_ENV['telegram_chatid']) {
                 // 非我方群组
-                return;
+                return null;
             }
         }
 
@@ -64,7 +66,7 @@ final class MyCommand extends Command
             // 回送信息
             $response = $this->replyWithMessage(
                 [
-                    'text' => $_ENV['user_not_bind_reply'],
+                    'text' => Setting::obtain('user_not_bind_reply'),
                     'reply_to_message_id' => $MessageID,
                     'parse_mode' => 'Markdown',
                 ]
@@ -87,15 +89,13 @@ final class MyCommand extends Command
         $text = Reply::getUserTitle($User);
         $text .= PHP_EOL . PHP_EOL;
         $text .= Reply::getUserTrafficInfo($User);
-        $text .= PHP_EOL;
-        $text .= '流量重置时间：' . $User->validUseLoop();
         // 回送信息
         return $this->replyWithMessage(
             [
                 'text' => $text,
                 'parse_mode' => 'Markdown',
                 'reply_to_message_id' => $MessageID,
-                'reply_markup' => \json_encode(
+                'reply_markup' => json_encode(
                     [
                         'inline_keyboard' => [
                             [

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Utils\Telegram\Commands;
 
+use App\Models\Setting;
 use App\Utils\Telegram\TelegramTools;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
@@ -16,12 +17,12 @@ final class CheckinCommand extends Command
     /**
      * @var string Command Name
      */
-    protected $name = 'checkin';
+    protected string $name = 'checkin';
 
     /**
      * @var string Command Description
      */
-    protected $description = '[群组/私聊] 每日签到.';
+    protected string $description = '[群组/私聊] 每日签到.';
 
     /**
      * {@inheritdoc}
@@ -35,13 +36,13 @@ final class CheckinCommand extends Command
         $ChatID = $Message->getChat()->getId();
 
         if ($ChatID < 0) {
-            if ($_ENV['telegram_group_quiet'] === true) {
+            if (Setting::obtain('telegram_group_quiet')) {
                 // 群组中不回应
-                return;
+                return null;
             }
             if ($ChatID !== $_ENV['telegram_chatid']) {
                 // 非我方群组
-                return;
+                return null;
             }
         }
 
@@ -51,15 +52,13 @@ final class CheckinCommand extends Command
         // 触发用户
         $SendUser = [
             'id' => $Message->getFrom()->getId(),
-            'name' => $Message->getFrom()->getFirstName() . ' ' . $Message->getFrom()->getLastName(),
-            'username' => $Message->getFrom()->getUsername(),
         ];
         $User = TelegramTools::getUser($SendUser['id']);
         if ($User === null) {
             // 回送信息
             $response = $this->replyWithMessage(
                 [
-                    'text' => $_ENV['user_not_bind_reply'],
+                    'text' => Setting::obtain('user_not_bind_reply'),
                     'parse_mode' => 'Markdown',
                     'reply_to_message_id' => $Message->getMessageId(),
                 ]

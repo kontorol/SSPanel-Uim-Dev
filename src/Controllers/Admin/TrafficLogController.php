@@ -7,13 +7,14 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\UserHourlyUsage;
 use App\Utils\Tools;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Http\Request;
 use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 
 final class TrafficLogController extends BaseController
 {
-    public static $details =
+    public static array $details =
     [
         'field' => [
             'id' => '记录ID',
@@ -27,23 +28,21 @@ final class TrafficLogController extends BaseController
     /**
      * 后台流量记录页面
      *
-     * @param array     $args
+     * @throws Exception
      */
-    public function index(Request $request, Response $response, array $args): ResponseInterface
+    public function index(ServerRequest $request, Response $response, array $args): ResponseInterface
     {
         return $response->write(
             $this->view()
                 ->assign('details', self::$details)
-                ->display('admin/log/traffic.tpl')
+                ->fetch('admin/log/traffic.tpl')
         );
     }
 
     /**
      * 后台流量记录页面 AJAX
-     *
-     * @param array     $args
      */
-    public function ajaxTrafficLog(Request $request, Response $response, array $args): ResponseInterface
+    public function ajax(ServerRequest $request, Response $response, array $args): ResponseInterface
     {
         $length = $request->getParam('length');
         $page = $request->getParam('start') / $length + 1;

@@ -1,4 +1,4 @@
-{include file='admin/tabler_header.tpl'}
+{include file='admin/header.tpl'}
 
 <div class="page-wrapper">
     <div class="container-xl">
@@ -12,31 +12,21 @@
                         <span class="home-subtitle">订单详情</span>
                     </div>
                 </div>
-                <div class="col-auto ms-auto d-print-none">
+                <div class="col-auto">
                     <div class="btn-list">
-                        <a href="/admin/user/{$order->user_id}/edit" targer="_blank" class="btn btn-primary d-none d-sm-inline-block">
+                        <a href="/admin/user/{$order->user_id}/edit" targer="_blank" class="btn btn-primary">
                             <i class="icon ti ti-user"></i>
                             查看关联用户
                         </a>
-                        <a href="/admin/user/{$order->user_id}/edit" targer="_blank" class="btn btn-primary d-sm-none btn-icon">
-                            <i class="icon ti ti-user"></i>
-                        </a>
-                        <a href="/admin/invoice/{$invoice->id}/view" targer="_blank" class="btn btn-primary d-none d-sm-inline-block">
+                        <a href="/admin/invoice/{$invoice->id}/view" targer="_blank" class="btn btn-primary">
                             <i class="icon ti ti-file-dollar"></i>
                             查看关联账单
                         </a>
-                        <a href="/admin/invoice/{$invoice->id}/view" targer="_blank" class="btn btn-primary d-sm-none btn-icon">
-                            <i class="icon ti ti-file-dollar"></i>
-                        </a>
-                        {if $order->status !== 'cancelled' && $order->status !== 'activated'}
-                        <button href="#" class="btn btn-red d-none d-sm-inline-block" data-bs-toggle="modal"
+                        {if $order->status === 'pending_payment'}
+                        <button href="#" class="btn btn-red" data-bs-toggle="modal"
                             data-bs-target="#cancel_order_confirm_dialog">
                             <i class="icon ti ti-x"></i>
                             取消订单
-                        </button>
-                        <button href="#" class="btn btn-red d-sm-none btn-icon" data-bs-toggle="modal"
-                            data-bs-target="#cancel_order_confirm_dialog">
-                            <i class="icon ti ti-x"></i>
                         </button>
                         {/if}
                     </div>
@@ -78,7 +68,7 @@
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">订单状态</div>
-                            <div class="datagrid-content">{$order->status}</div>
+                            <div class="datagrid-content">{$order->status_text}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">创建时间</div>
@@ -99,35 +89,41 @@
                     <div class="datagrid">
                         <div class="datagrid-item">
                             <div class="datagrid-title">商品时长 (天)</div>
-                            <div class="datagrid-content">{$product_content['time']}</div>
+                            <div class="datagrid-content">{$product_content->time}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">可用流量 (GB)</div>
-                            <div class="datagrid-content">{$product_content['bandwidth']}</div>
+                            <div class="datagrid-content">{$product_content->bandwidth}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">等级</div>
-                            <div class="datagrid-content">{$product_content['class']}</div>
+                            <div class="datagrid-content">{$product_content->class}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">等级时长 (天)</div>
-                            <div class="datagrid-content">{$product_content['class_time']}</div>
+                            <div class="datagrid-content">{$product_content->class_time}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">用户分组</div>
-                            <div class="datagrid-content">{$product_content['node_group']}</div>
+                            <div class="datagrid-content">{$product_content->node_group}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">速率限制 (Mbps)</div>
-                            <div class="datagrid-content">{$product_content['speed_limit']}</div>
+                            <div class="datagrid-content">
+                            {if $product_content->ip_limit === '0'}
+                            不限制
+                            {else}
+                            {$product_content->speed_limit}
+                            {/if}
+                            </div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">同时连接IP限制</div>
                             <div class="datagrid-content">
-                            {if $product_content['ip_limit'] === '-1'}
+                            {if $product_content->ip_limit === '0'}
                             不限制
                             {else}
-                            {$product_content['ip_limit']}
+                            {$product_content->ip_limit}
                             {/if}
                             </div>
                         </div>
@@ -154,8 +150,8 @@
                                         <tbody>
                                             {foreach $invoice_content as $invoice_content_detail}
                                             <tr>
-                                                <td>{$invoice_content_detail['name']}</td>
-                                                <td>{$invoice_content_detail['price']}</td>
+                                                <td>{$invoice_content_detail->name}</td>
+                                                <td>{$invoice_content_detail->price}</td>
                                             </tr>
                                             {/foreach}
                                         </tbody>
@@ -218,7 +214,7 @@
                 type: 'POST',
                 dataType: "json",
                 success: function(data) {
-                    if (data.ret == 1) {
+                    if (data.ret === 1) {
                         $('#success-message').text(data.msg);
                         $('#success-dialog').modal('show');
                     } else {
@@ -228,10 +224,6 @@
                 }
             })
         });
-
-        $("#success-confirm").click(function() {
-            location.reload();
-        });
     </script>
 
-{include file='admin/tabler_footer.tpl'}
+{include file='admin/footer.tpl'}

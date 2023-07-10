@@ -7,13 +7,15 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\GiftCard;
 use App\Utils\Tools;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Http\Request;
 use Slim\Http\Response;
+use Slim\Http\ServerRequest;
+use function time;
 
 final class GiftCardController extends BaseController
 {
-    public static $details = [
+    public static array $details = [
         'field' => [
             'op' => '操作',
             'id' => '礼品卡ID',
@@ -52,33 +54,43 @@ final class GiftCardController extends BaseController
         ],
     ];
 
-    public function index(Request $request, Response $response, array $args): ResponseInterface
+    /**
+     * @throws Exception
+     */
+    public function index(ServerRequest $request, Response $response, array $args): Response|ResponseInterface
     {
         return $response->write(
             $this->view()
                 ->assign('details', self::$details)
-                ->display('admin/giftcard.tpl')
+                ->fetch('admin/giftcard.tpl')
         );
     }
 
-    public function add(Request $request, Response $response, array $args): ResponseInterface
+    public function add(ServerRequest $request, Response $response, array $args): Response|ResponseInterface
     {
-        $card_number = $request->getParam('card_number');
-        $card_value = $request->getParam('card_value');
-        $card_length = $request->getParam('card_length');
+        $card_number = $request->getParam('card_number') ?? 0;
+        $card_value = $request->getParam('card_value') ?? 0;
+        $card_length = $request->getParam('card_length') ?? 0;
         $card_added = '';
 
-        if ($card_number === null || $card_number < 0) {
+        if ($card_number === '' || $card_number <= 0) {
             return $response->withJson([
                 'ret' => 0,
                 'msg' => '生成数量不能为空或小于0',
             ]);
         }
 
-        if ($card_value === null || $card_value < 0) {
+        if ($card_value === '' || $card_value <= 0) {
             return $response->withJson([
                 'ret' => 0,
                 'msg' => '礼品卡面值不能为空或小于0',
+            ]);
+        }
+
+        if ($card_length === '' || $card_length <= 0) {
+            return $response->withJson([
+                'ret' => 0,
+                'msg' => '礼品卡长度不能为空或小于0',
             ]);
         }
 
@@ -88,7 +100,7 @@ final class GiftCardController extends BaseController
             $giftcard = new GiftCard();
             $giftcard->card = $card;
             $giftcard->balance = $card_value;
-            $giftcard->create_time = \time();
+            $giftcard->create_time = time();
             $giftcard->status = 0;
             $giftcard->use_time = 0;
             $giftcard->use_user = 0;
@@ -102,26 +114,29 @@ final class GiftCardController extends BaseController
         ]);
     }
 
-    public function delete(Request $request, Response $response, array $args): ResponseInterface
+    public function delete(ServerRequest $request, Response $response, array $args): Response|ResponseInterface
     {
         $card_id = $args['id'];
         GiftCard::find($card_id)->delete();
+
         return $response->withJson([
             'ret' => 1,
             'msg' => '删除成功',
         ]);
     }
 
-    public function ajax(Request $request, Response $response, array $args): ResponseInterface
+    public function ajax(ServerRequest $request, Response $response, array $args): Response|ResponseInterface
     {
         $giftcards = GiftCard::orderBy('id', 'desc')->get();
+
         foreach ($giftcards as $giftcard) {
             $giftcard->op = '<button type="button" class="btn btn-red" id="delete-gift-card-' . $giftcard->id . '" 
         onclick="deleteGiftCard(' . $giftcard->id . ')">删除</button>';
-            $giftcard->status = Tools::getGiftCardStatus($giftcard);
+            $giftcard->status = $giftcard->status();
             $giftcard->create_time = Tools::toDateTime((int) $giftcard->create_time);
             $giftcard->use_time = Tools::toDateTime((int) $giftcard->use_time);
         }
+
         return $response->withJson([
             'giftcards' => $giftcards,
         ]);

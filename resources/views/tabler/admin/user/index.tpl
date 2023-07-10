@@ -1,4 +1,4 @@
-{include file='admin/tabler_header.tpl'}
+{include file='admin/header.tpl'}
 
 <div class="page-wrapper">
     <div class="container-xl">
@@ -14,17 +14,13 @@
                         </span>
                     </div>
                 </div>
-                <div class="col-auto ms-auto d-print-none">
+                <div class="col-auto">
                     <div class="btn-list">
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal"
+                        <button href="#" class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#create-dialog">
                             <i class="icon ti ti-plus"></i>
                             创建
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal"
-                            data-bs-target="#create-dialog">
-                            <i class="icon ti ti-plus"></i>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -61,7 +57,7 @@
                 </div>
                 <div class="modal-body">
                     {foreach $details['create_dialog'] as $from}
-                        {if $from['type'] == 'input'}
+                        {if $from['type'] === 'input'}
                             <div class="form-group mb-3 row">
                                 <label class="form-label col-3 col-form-label">{$from['info']}</label>
                                 <div class="col">
@@ -70,14 +66,14 @@
                                 </div>
                             </div>
                         {/if}
-                        {if $from['type'] == 'textarea'}
+                        {if $from['type'] === 'textarea'}
                             <div class="form-group mb-3 row">
                                 <label class="form-label col-3 col-form-label">{$from['info']}</label>
                                 <textarea id="{$from['id']}" class="col form-control" rows="{$from['rows']}"
                                     placeholder="{$from['placeholder']}"></textarea>
                             </div>
                         {/if}
-                        {if $from['type'] == 'select'}
+                        {if $from['type'] === 'select'}
                             <div class="form-group mb-3 row">
                                 <label class="form-label col-3 col-form-label">{$from['info']}</label>
                                 <div class="col">
@@ -90,17 +86,6 @@
                             </div>
                         {/if}
                     {/foreach}
-                    <div class="form-group mb-3 row">
-                        <label class="form-label col-3 col-form-label">开通套餐</label>
-                        <div class="col">
-                            <select id="new_user_add_shop" class="col form-select">
-                                <option value="0">不开通</option>
-                                {foreach $shops as $shop}
-                                    <option value="{$shop->id}">{$shop->name}</option>
-                                {/foreach}
-                            </select>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn me-auto" data-bs-dismiss="modal">取消</button>
@@ -173,12 +158,11 @@
                     {foreach $details['create_dialog'] as $from}
                         {$from['id']}: $('#{$from['id']}').val(),
                     {/foreach}
-                    product: $('#new_user_add_shop').val(),
                 },
                 success: function(data) {
-                    if (data.ret == 1) {
-                        $('#success-message').text(data.msg);
-                        $('#success-dialog').modal('show');
+                    if (data.ret === 1) {
+                        $('#success-noreload-message').text(data.msg);
+                        $('#success-noreload-dialog').modal('show');
                         reloadTableAjax();
                     } else {
                         $('#fail-message').text(data.msg);
@@ -191,15 +175,15 @@
         function deleteUser(user_id) {
             $('#notice-message').text('确定删除此用户？');
             $('#notice-dialog').modal('show');
-            $('#notice-confirm').on('click', function() {
+            $('#notice-confirm').off('click').on('click', function() {
                 $.ajax({
                     url: "/admin/user/" + user_id,
                     type: 'DELETE',
                     dataType: "json",
                     success: function(data) {
-                        if (data.ret == 1) {
-                            $('#success-message').text(data.msg);
-                            $('#success-dialog').modal('show');
+                        if (data.ret === 1) {
+                            $('#success-noreload-message').text(data.msg);
+                            $('#success-noreload-dialog').modal('show');
                             reloadTableAjax();
                         } else {
                             $('#fail-message').text(data.msg);
@@ -208,7 +192,7 @@
                     }
                 })
             });
-        };
+        }
 
         function reloadTableAjax() {
             table.ajax.reload(null, false);
@@ -217,4 +201,4 @@
         loadTable();
     </script>
 
-{include file='admin/tabler_footer.tpl'}
+{include file='admin/footer.tpl'}

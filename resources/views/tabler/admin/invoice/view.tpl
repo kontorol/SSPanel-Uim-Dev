@@ -1,4 +1,4 @@
-{include file='admin/tabler_header.tpl'}
+{include file='admin/header.tpl'}
 
 <div class="page-wrapper">
     <div class="container-xl">
@@ -12,21 +12,17 @@
                         <span class="home-subtitle">账单详情</span>
                     </div>
                 </div>
-                <div class="col-auto ms-auto d-print-none">
+                {if $invoice->status === 'unpaid'}
+                <div class="col-auto">
                     <div class="btn-list">
-                        {if $invoice->status !== 'paid_gateway' && $invoice->status !== 'paid_balance' && $invoice->status !== 'paid_admin'}
-                        <button href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal"
+                        <button href="#" class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#mark_paid_confirm_dialog">
                             <i class="icon ti ti-checklist"></i>
                             标记为支付
                         </button>
-                        <button href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal"
-                            data-bs-target="#mark_paid_confirm_dialog">
-                            <i class="icon ti ti-checklist"></i>
-                        </button>
-                        {/if}
                     </div>
                 </div>
+                {/if}
             </div>
         </div>
     </div>
@@ -43,16 +39,16 @@
                             <div class="datagrid-content">{$invoice->user_id}</div>
                         </div>
                         <div class="datagrid-item">
-                            <div class="datagrid-title">订单ID</div>
+                            <div class="datagrid-title">关联订单 ID</div>
                             <div class="datagrid-content">{$invoice->order_id}</div>
                         </div>
                         <div class="datagrid-item">
-                            <div class="datagrid-title">订单金额</div>
+                            <div class="datagrid-title">账单金额</div>
                             <div class="datagrid-content">{$invoice->price}</div>
                         </div>
                         <div class="datagrid-item">
-                            <div class="datagrid-title">订单状态</div>
-                            <div class="datagrid-content">{$invoice->status}</div>
+                            <div class="datagrid-title">账单状态</div>
+                            <div class="datagrid-content">{$invoice->status_text}</div>
                         </div>
                         <div class="datagrid-item">
                             <div class="datagrid-title">创建时间</div>
@@ -66,6 +62,12 @@
                             <div class="datagrid-title">支付时间</div>
                             <div class="datagrid-content">{$invoice->pay_time}</div>
                         </div>
+                        {if $invoice->status === 'paid_gateway'}
+                        <div class="datagrid-item">
+                            <div class="datagrid-title">支付网关单号</div>
+                            <div class="datagrid-content">{$paylist->tradeno}</div>
+                        </div>
+                        {/if}
                     </div>
                 </div>
             </div>
@@ -85,8 +87,8 @@
                             <tbody>
                                 {foreach $invoice_content as $invoice_content_detail}
                                 <tr>
-                                    <td>{$invoice_content_detail['name']}</td>
-                                    <td>{$invoice_content_detail['price']}</td>
+                                    <td>{$invoice_content_detail->name}</td>
+                                    <td>{$invoice_content_detail->price}</td>
                                 </tr>
                                 {/foreach}
                             </tbody>
@@ -126,7 +128,7 @@
                 type: 'POST',
                 dataType: "json",
                 success: function(data) {
-                    if (data.ret == 1) {
+                    if (data.ret === 1) {
                         $('#success-message').text(data.msg);
                         $('#success-dialog').modal('show');
                     } else {
@@ -136,10 +138,6 @@
                 }
             })
         });
-
-        $("#success-confirm").click(function() {
-            location.reload();
-        });
     </script>
 
-{include file='admin/tabler_footer.tpl'}
+{include file='admin/footer.tpl'}
